@@ -33,7 +33,6 @@ jobs:
       - name: 🔧 Build mod with full debug output
         id: build
         run: |
-          # Si build.gradle no está en la raíz, búscalo y cd a la carpeta que lo contiene
           BUILD_FILE=$(find . -name "build.gradle" -type f | head -1)
           if [ -z "$BUILD_FILE" ]; then
             echo "::error::No se encontró build.gradle en ningún sitio"
@@ -42,22 +41,21 @@ jobs:
           BUILD_DIR=$(dirname "$BUILD_FILE")
           echo "📁 build.gradle encontrado en: $BUILD_DIR"
           
-          # Cambiamos al directorio del proyecto
           cd "$BUILD_DIR"
           echo "📂 Ahora en: $(pwd)"
           ls -la
           
-          # Ejecutamos Gradle con todos los detalles
-          echo "🚀 Ejecutando: gradle build --stacktrace --debug"
-          gradle build --stacktrace --debug 2>&1 | tee build-output.log
+          echo "🚀 Ejecutando: gradle build --stacktrace --info"
+          gradle build --stacktrace --info 2>&1 | tee build-output.log
           EXIT_CODE=${PIPESTATUS[0]}
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
           
           if [ $EXIT_CODE -ne 0 ]; then
             echo "::error::❌ BUILD FAILED con código $EXIT_CODE"
-            echo "========== ÚLTIMAS 50 LÍNEAS DEL LOG =========="
-            tail -n 50 build-output.log
-            echo "=============================================="
+            echo "========== BUSCANDO 'FAILED' EN EL LOG =========="
+            # Busca la línea que contiene "FAILED" y muestra 20 líneas antes y después
+            grep -n -B20 -A20 "FAILED" build-output.log | head -60
+            echo "================================================"
             echo "📄 Log completo disponible en el artefacto"
             exit $EXIT_CODE
           fi
