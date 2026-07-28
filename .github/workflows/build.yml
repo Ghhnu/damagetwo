@@ -33,7 +33,6 @@ jobs:
       - name: Build mod and capture full log
         id: build
         run: |
-          cd damagetwo   # Cambia por el nombre real de la carpeta
           gradle build --stacktrace --info 2>&1 | tee build-output.log
           EXIT_CODE=${PIPESTATUS[0]}
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
