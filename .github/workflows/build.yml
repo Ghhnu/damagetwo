@@ -17,17 +17,21 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: 8.8
-          cache-disabled: true   # <--- Evita los problemas de caché
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-      - name: Build mod
-        run: gradle build --stacktrace   # <--- Muestra el error detallado
+      - name: Build mod with full logs
+        id: build
+        run: |
+          ./gradlew build --stacktrace 2>&1 | tee build-output.log
+          if [ ${PIPESTATUS[0]} -ne 0 ]; then
+            echo "::error::Build failed. Check the artifact 'gradle-build-log' for details."
+            exit 1
+          fi
 
-      - name: Upload compiled jar
+      - name: Upload build log if failed
+        if: failure()
         uses: actions/upload-artifact@v4
         with:
-          name: damageon-mod-jar
-          path: build/libs/*.jar
+          name: gradle-build-log
+          path: build-output.log
