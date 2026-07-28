@@ -33,16 +33,13 @@ jobs:
       - name: Build mod and capture full log
         id: build
         run: |
-          # Ejecuta Gradle y guarda toda la salida en un archivo, mostrándola también en consola
+          cd damagetwo   # Cambia por el nombre real de la carpeta
           gradle build --stacktrace --info 2>&1 | tee build-output.log
-          # Guarda el código de retorno de Gradle (no del tee)
           EXIT_CODE=${PIPESTATUS[0]}
-          echo "Gradle exit code: $EXIT_CODE"
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
-          # Si falla, mostramos el contenido del log para que se vea en los logs de GitHub
           if [ $EXIT_CODE -ne 0 ]; then
-            echo "::error::Build failed with exit code $EXIT_CODE. Check the artifact or logs above."
-            cat build-output.log   # Forzamos que se vea en la consola
+            echo "::error::Build failed with exit code $EXIT_CODE."
+            cat build-output.log
             exit $EXIT_CODE
           fi
 
