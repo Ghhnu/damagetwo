@@ -1,58 +1,84 @@
-# DamageOn - Mod de Fabric para 1.21
+# Real Health
 
-## Qué hace
-- Comando `/damageon`: activa/desactiva el modo (es un interruptor, escríbelo otra vez para desactivarlo).
-- Con el modo activado, la próxima vez que recibas cualquier daño:
-  1. Se muestran los límites del chunk en el que estás con partículas de llama.
-  2. Empieza una cuenta atrás de 7 segundos (verás el aviso en pantalla).
-  3. Al terminar, **todo el chunk se vacía** (todos los bloques de ese chunk, desde abajo hasta arriba, se convierten en aire).
+Mod de **Fabric** (solo cliente) para Minecraft **26.1.2** que muestra encima
+del nombre de cada jugador y cada mob su vida real, tal cual: `❤ 10` si tiene
+10 corazones, `❤ 7.5` si tiene 15 puntos de vida, etc. Con color según el
+porcentaje de vida (verde / amarillo / rojo).
 
-⚠️ Nota: no es técnicamente posible "eliminar" un chunk del archivo de región mientras el mundo está cargado sin
-riesgo de corromper el guardado. Por eso el mod vacía el chunk (lo deja en aire), que es el efecto equivalente
-para el juego. Si prefieres otro comportamiento (por ejemplo, rellenarlo de lava, o solo la zona alrededor del
-jugador), dímelo y lo ajusto.
+## ¿Por qué funciona sin ser admin?
 
-## Opción fácil: que GitHub lo compile por ti (sin instalar nada)
-Este proyecto ya incluye `.github/workflows/build.yml`, que hace que GitHub compile el mod automáticamente
-en sus propios servidores (gratis) en cuanto subas los archivos:
+Cuando juegas en un servidor, este ya le envía a tu cliente la vida exacta de
+cualquier jugador o mob que puedas ver (es el mismo dato que usa el juego
+internamente para la animación de "daño" en rojo). Este mod simplemente **lee
+ese dato en tu propio cliente y lo dibuja en pantalla** — no manda nada nuevo
+al servidor, no necesita comandos, permisos ni que el servidor tenga nada
+instalado. Por eso funciona en cualquier server (vanilla, Spigot, Paper...)
+solo con instalarlo en tu carpeta `mods`, exactamente como pediste.
 
-1. Crea cuenta en https://github.com
-2. "New" → crea un repositorio (público o privado, el nombre que quieras).
-3. En esa página, usa el enlace "uploading an existing file" y arrastra TODO el contenido descomprimido
-   de esta carpeta (incluida `.github`).
-4. Ve a la pestaña "Actions" del repo, espera a que termine (✅ verde).
-5. Entra en ese resultado, baja a "Artifacts" y descarga `damageon-mod-jar` → ahí está tu `.jar`.
-6. Cópialo a tu carpeta `mods` de Minecraft.
+**Aviso:** aunque técnicamente es indetectable para el servidor (no cambia tu
+comportamiento ni manda paquetes distintos), revisa las reglas del servidor
+donde juegues por si prohíben explícitamente mods de este tipo.
 
-## Alternativa: compilarlo en tu propio PC (necesitas Java 21)
-Este entorno donde te escribo no tiene acceso a los repositorios de Maven de Fabric, así que no puedo compilar
-el `.jar` final aquí. Si prefieres hacerlo local en vez de con GitHub:
+## ⚠️ Importante sobre la versión
 
-1. Instala **Java 21** (JDK) si no lo tienes.
-2. Abre esta carpeta (`damageon-mod`) con **IntelliJ IDEA** (recomendado, tiene el plugin de Fabric) o usa
-   la terminal.
-3. Antes de compilar, comprueba en https://fabricmc.net/develop/ los números exactos de:
-   - `yarn_mappings`
-   - `loader_version`
-   - `fabric_version`
-   para la versión 1.21.x que uses, y ajústalos en `gradle.properties` si no coinciden.
-4. Compila con:
-   ```
-   ./gradlew build
-   ```
-   (en Windows: `gradlew.bat build`)
-5. El `.jar` final aparecerá en `build/libs/damageon-1.0.0.jar`.
+26.1.2 se publicó el 9 de abril de 2026, y es una de las primeras versiones
+"desofuscadas" de Minecraft (Mojang publicó los nombres reales de las clases
+en vez de nombres ofuscados, y Fabric dejó de usar Yarn). Es una versión
+**muy reciente**, así que hay un pequeño riesgo de que algún import tenga el
+paquete ligeramente distinto al que escribí aquí (por ejemplo, si Mojang
+movió alguna clase de paquete en un hotfix posterior). Si al compilar te sale
+un error tipo `cannot find symbol` o `package no existe`, **pégame el error
+tal cual** y te doy la línea corregida en el momento — normalmente es un
+cambio de una sola palabra.
 
-## Dónde ponerlo
-Copia ese `.jar` a la carpeta **`mods`** de tu instancia (la misma que aparece en tu captura de pantalla,
-junto a `.fabric`, `config`, `saves`, etc.). También necesitas tener instalado ahí el mod **Fabric API**
-(el .jar oficial, descárgalo de Modrinth o CurseForge para tu versión de 1.21), porque este mod depende de él.
+## Cómo subirlo a GitHub y generar el .jar automáticamente
 
-Estructura esperada dentro de tu carpeta de instancia:
+1. Crea un repositorio nuevo en GitHub (público o privado, da igual).
+2. Sube **todos** estos archivos y carpetas tal cual están (incluyendo la
+   carpeta oculta `.github`), manteniendo la misma estructura de carpetas.
+   - Más fácil: en la página del repo, "Add file" → "Upload files", arrastra
+     todo, y confirma el commit. GitHub respeta las carpetas si arrastras la
+     estructura completa (o usa `git push` si prefieres la terminal).
+3. En cuanto hagas el commit, la pestaña **Actions** del repo compilará el
+   mod automáticamente (tarda 2-4 minutos).
+4. Cuando termine (icono verde ✅), entra en esa ejecución y baja hasta
+   "Artifacts": ahí está `realhealth-jar`, descárgalo y descomprímelo — dentro
+   tienes el `.jar` listo para usar.
+
+Si algún día quieres compilarlo tú en tu PC en vez de con GitHub Actions,
+necesitas Java 25 y Gradle 9.5+ instalados, y basta con ejecutar
+`gradle build` dentro de la carpeta del proyecto (no hace falta más
+configuración: Loom descarga Minecraft y Fabric API automáticamente).
+
+## Cómo instalarlo en tu Minecraft
+
+1. Instala **Fabric Loader** para la 26.1.2 desde fabricmc.net (el instalador
+   oficial).
+2. Descarga **Fabric API** para 26.1.2 (Modrinth o CurseForge) y ponlo en tu
+   carpeta `mods` (`%appdata%\.minecraft\mods` en Windows).
+3. Pon ahí también el `.jar` que generaste con GitHub Actions.
+4. Abre el launcher, selecciona el perfil "fabric-loader-26.1.2" y juega.
+
+## Estructura del proyecto
+
 ```
-mods/
-  fabric-api-x.x.x.jar
-  damageon-1.0.0.jar
+realhealth/
+├── build.gradle              # configuración de compilación (Loom)
+├── gradle.properties         # versiones de Minecraft / Fabric usadas
+├── settings.gradle
+├── LICENSE
+├── .github/workflows/build.yml   # compila el .jar automáticamente
+└── src/
+    ├── main/java/com/realhealth/RealHealthMod.java      # entrypoint común (casi vacío)
+    ├── main/resources/fabric.mod.json                    # manifiesto del mod
+    └── client/java/com/realhealth/client/
+        ├── RealHealthClient.java   # entrypoint de cliente
+        └── HealthRenderer.java     # aquí está toda la lógica de dibujado
 ```
 
-Reinicia el mundo/servidor y prueba con `/damageon`.
+Todo el código relevante está en `HealthRenderer.java`. No usa mixins ni toca
+clases internas del juego: solo usa la API pública de Fabric
+(`LevelRenderEvents.AFTER_ENTITIES`) para dibujar texto en el mundo, así que
+es sencillo de leer y de modificar si quieres, por ejemplo, cambiar la
+distancia máxima, los colores, o mostrar también la vida máxima
+(`❤ 10/10`).
