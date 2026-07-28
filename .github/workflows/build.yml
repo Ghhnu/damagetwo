@@ -21,30 +21,50 @@ jobs:
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.8
-          cache-disabled: true   # Evita problemas de caché
+          cache-disabled: true
 
-      - name: List directory contents (for debugging)
+      - name: 🔍 Debug - List all files and folders
         run: |
-          echo "Current directory:"
-          pwd
-          echo "Files:"
+          echo "=== Current directory: $(pwd) ==="
           ls -la
+          echo "=== Checking for build.gradle in subfolders ==="
+          find . -name "build.gradle" -type f | head -10
 
-      - name: Build mod and capture full log
+      - name: 🔧 Build mod with full debug output
         id: build
         run: |
-          gradle build --stacktrace --info 2>&1 | tee build-output.log
+          # Si build.gradle no está en la raíz, búscalo y cd a la carpeta que lo contiene
+          BUILD_FILE=$(find . -name "build.gradle" -type f | head -1)
+          if [ -z "$BUILD_FILE" ]; then
+            echo "::error::No se encontró build.gradle en ningún sitio"
+            exit 1
+          fi
+          BUILD_DIR=$(dirname "$BUILD_FILE")
+          echo "📁 build.gradle encontrado en: $BUILD_DIR"
+          
+          # Cambiamos al directorio del proyecto
+          cd "$BUILD_DIR"
+          echo "📂 Ahora en: $(pwd)"
+          ls -la
+          
+          # Ejecutamos Gradle con todos los detalles
+          echo "🚀 Ejecutando: gradle build --stacktrace --debug"
+          gradle build --stacktrace --debug 2>&1 | tee build-output.log
           EXIT_CODE=${PIPESTATUS[0]}
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          
           if [ $EXIT_CODE -ne 0 ]; then
-            echo "::error::Build failed with exit code $EXIT_CODE."
-            cat build-output.log
+            echo "::error::❌ BUILD FAILED con código $EXIT_CODE"
+            echo "========== ÚLTIMAS 50 LÍNEAS DEL LOG =========="
+            tail -n 50 build-output.log
+            echo "=============================================="
+            echo "📄 Log completo disponible en el artefacto"
             exit $EXIT_CODE
           fi
 
-      - name: Upload build log (always, even if build succeeded)
+      - name: 📤 Upload full build log (always)
         uses: actions/upload-artifact@v4
         with:
           name: gradle-build-log
           path: build-output.log
-        if: always()   # Sube el archivo aunque falle el paso anterior
+        if: always()
