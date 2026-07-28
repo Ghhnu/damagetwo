@@ -17,11 +17,14 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.8
+          cache-disabled: true   # <--- Evita los problemas de caché
 
       - name: Build mod
-        run: ./gradlew build
+        run: gradle build --stacktrace   # <--- Muestra el error detallado
 
       - name: Upload compiled jar
         uses: actions/upload-artifact@v4
