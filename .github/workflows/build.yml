@@ -17,21 +17,38 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
+      - name: Set up Gradle (with cache disabled)
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.8
+          cache-disabled: true   # Evita problemas de caché
 
-      - name: Build mod with full logs
+      - name: List directory contents (for debugging)
+        run: |
+          echo "Current directory:"
+          pwd
+          echo "Files:"
+          ls -la
+
+      - name: Build mod and capture full log
         id: build
         run: |
-          ./gradlew build --stacktrace 2>&1 | tee build-output.log
-          if [ ${PIPESTATUS[0]} -ne 0 ]; then
-            echo "::error::Build failed. Check the artifact 'gradle-build-log' for details."
-            exit 1
+          # Ejecuta Gradle y guarda toda la salida en un archivo, mostrándola también en consola
+          gradle build --stacktrace --info 2>&1 | tee build-output.log
+          # Guarda el código de retorno de Gradle (no del tee)
+          EXIT_CODE=${PIPESTATUS[0]}
+          echo "Gradle exit code: $EXIT_CODE"
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          # Si falla, mostramos el contenido del log para que se vea en los logs de GitHub
+          if [ $EXIT_CODE -ne 0 ]; then
+            echo "::error::Build failed with exit code $EXIT_CODE. Check the artifact or logs above."
+            cat build-output.log   # Forzamos que se vea en la consola
+            exit $EXIT_CODE
           fi
 
-      - name: Upload build log if failed
-        if: failure()
+      - name: Upload build log (always, even if build succeeded)
         uses: actions/upload-artifact@v4
         with:
           name: gradle-build-log
           path: build-output.log
+        if: always()   # Sube el archivo aunque falle el paso anterior
