@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "id": "damageon",
+  "version": "${version}",
+  "name": "DamageOn Chunk Eraser",
+  "description": "Al usar /damageon: si recibes daño, se muestran los límites del chunk y tras 7 segundos se borra por completo.",
+  "authors": ["Tú"],
+  "contact": {},
+  "license": "MIT",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.tuusuario.damageon.DamageOnMod"
+    ]
+  },
+  "depends": {
+    "fabricloader": ">=0.15.0",
+    "fabric-api": "*",
+    "minecraft": "~1.21",
+    "java": ">=21"
+  }
+}
