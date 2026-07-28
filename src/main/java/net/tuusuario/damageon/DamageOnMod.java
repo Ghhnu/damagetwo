@@ -49,17 +49,22 @@ public class DamageOnMod implements ModInitializer {
         );
 
         // --- Detección de daño ---
-        ServerLivingEntityEvents.AFTER_DAMAGE.register((entity, damageSource, baseDamageTaken, damageTaken, blocked) -> {
-            if (blocked) return;
-            if (!(entity instanceof ServerPlayerEntity player)) return;
+        // Nota: se usa ALLOW_DAMAGE (se dispara ANTES de aplicar el daño) en vez de AFTER_DAMAGE,
+        // porque AFTER_DAMAGE no existe todavía en fabric-api 0.100.8+1.21 (se añadió en versiones
+        // posteriores de la API, a partir de Minecraft 1.21.2). Con ALLOW_DAMAGE ya no podemos saber
+        // si el golpe fue bloqueado con escudo (ese dato solo lo da AFTER_DAMAGE), así que ahora
+        // cualquier intento de daño, incluido uno bloqueado con escudo, activa la cuenta atrás.
+        ServerLivingEntityEvents.ALLOW_DAMAGE.register((entity, damageSource, amount) -> {
+            if (!(entity instanceof ServerPlayerEntity player)) return true;
 
             UUID id = player.getUuid();
-            if (!enabledPlayers.getOrDefault(id, false)) return;
-            if (activeCountdowns.containsKey(id)) return; // ya hay una cuenta atrás en marcha para este jugador
+            if (!enabledPlayers.getOrDefault(id, false)) return true;
+            if (activeCountdowns.containsKey(id)) return true; // ya hay una cuenta atrás en marcha para este jugador
 
             ServerWorld world = (ServerWorld) player.getWorld();
             ChunkPos chunkPos = player.getChunkPos();
             activeCountdowns.put(id, new CountdownTask(player, world, chunkPos));
+            return true; // dejar que el daño se aplique con normalidad
         });
 
         // --- Tick del servidor: avanza las cuentas atrás activas ---
